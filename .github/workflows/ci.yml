@@ -101,7 +101,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
-          body-path: pdf-link.md
+          body-file: pdf-link.md
 
   cleanup:
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
