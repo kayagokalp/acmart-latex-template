@@ -3,7 +3,7 @@ name: LaTeX Build
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
   workflow_dispatch:
 
@@ -15,17 +15,59 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up TeX Live
-        uses: dante-ev/setup-texlive-action@v1
-
-      - name: Install LaTeX Packages
-        run: |
-          sudo tlmgr install amscls amsfonts amsmath xint preprint booktabs caption comment \
-          cm-super cmap doclicense draftwatermark environ etoolbox fancyhdr float fontaxes \
-          geometry graphics hyperref hyperxmp iftex inconsolata libertine ncctools \
-          microtype mmap count1to multitoc prelim2e ragged2e everyshi everysel \
-          mweights natbib newtx oberdiek pdftex refcount setspace textcase totpages \
-          trimspaces upquote url xcolor xkeyval xstring
+      - name: Setup TeX Live
+        uses: teatimeguest/setup-texlive-action@v3
+        with:
+          packages: |
+            scheme-basic
+            amscls
+            amsfonts
+            amsmath
+            xint
+            preprint
+            booktabs
+            caption
+            comment
+            cm-super
+            cmap
+            doclicense
+            draftwatermark
+            environ
+            etoolbox
+            fancyhdr
+            float
+            fontaxes
+            geometry
+            graphics
+            hyperref
+            hyperxmp
+            iftex
+            inconsolata
+            libertine
+            ncctools
+            microtype
+            mmap
+            count1to
+            multitoc
+            prelim2e
+            ragged2e
+            everyshi
+            everysel
+            mweights
+            natbib
+            newtx
+            oberdiek
+            pdftex
+            refcount
+            setspace
+            textcase
+            totpages
+            trimspaces
+            upquote
+            url
+            xcolor
+            xkeyval
+            xstring
 
       - name: Cache TeX Live Packages
         uses: actions/cache@v3
