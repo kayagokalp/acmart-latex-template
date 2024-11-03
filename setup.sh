@@ -1,6 +1,7 @@
 # Search package from file: 
 # tlmgr search --global --file <FILENAME.sty>
 
+sudo tlmgr install ifmtarg
 sudo tlmgr install amscls
 sudo tlmgr install amsfonts
 sudo tlmgr install amsmath
