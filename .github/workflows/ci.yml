@@ -1,0 +1,46 @@
+name: LaTeX Build
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up TeX Live
+        uses: dante-ev/setup-texlive-action@v1
+
+      - name: Install LaTeX Packages
+        run: |
+          sudo tlmgr install amscls amsfonts amsmath xint preprint booktabs caption comment \
+          cm-super cmap doclicense draftwatermark environ etoolbox fancyhdr float fontaxes \
+          geometry graphics hyperref hyperxmp iftex inconsolata libertine ncctools \
+          microtype mmap count1to multitoc prelim2e ragged2e everyshi everysel \
+          mweights natbib newtx oberdiek pdftex refcount setspace textcase totpages \
+          trimspaces upquote url xcolor xkeyval xstring
+
+      - name: Cache TeX Live Packages
+        uses: actions/cache@v3
+        with:
+          path: /usr/local/texlive/2024
+          key: texlive-2024-${{ runner.os }}-${{ hashFiles('**/build.sh') }}
+          restore-keys: |
+            texlive-2024-${{ runner.os }}-
+
+      - name: Run LaTeX Build Script
+        run: ./build.sh
+
+      - name: Upload PDF Output
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: pdf-output
+          path: out/*.pdf
