@@ -90,12 +90,12 @@ jobs:
           name: pdf-output
           path: out/*.pdf
 
+      - name: Create Temporary Link Message for PR
+        if: github.event_name == 'pull_request' && success()
+        run: echo "PDF for this PR commit is available [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts)" > pdf-link.md
+
       - name: Post Temporary Link in PR
         if: github.event_name == 'pull_request' && success()
-        run: |
-          echo "PDF for this PR commit is available [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts)" > pdf-link.md
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         uses: peter-evans/create-or-update-comment@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
@@ -119,7 +119,7 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Git
+      - name: Configure Git
         run: |
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
