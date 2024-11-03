@@ -5,6 +5,7 @@ on:
     branches:
       - master
   pull_request:
+    types: [opened, synchronize]
   workflow_dispatch:
 
 jobs:
@@ -88,3 +89,48 @@ jobs:
         with:
           name: pdf-output
           path: out/*.pdf
+
+      - name: Post Temporary Link in PR
+        if: github.event_name == 'pull_request' && success()
+        run: |
+          echo "PDF for this PR commit is available [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts)" > pdf-link.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body-path: pdf-link.md
+
+  cleanup:
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
+    runs-on: ubuntu-latest
+    needs: build
+
+    steps:
+      - name: Delete Temporary PDF Links in PRs
+        uses: peter-evans/delete-pull-request-comment@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ${{ github.repository }}
+          comment-author: "github-actions[bot]"
+
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
+      - name: Generate Final PDF and Upload to gh-pages
+        run: |
+          git checkout --orphan gh-pages
+          git rm -rf .
+          cp out/*.pdf latest.pdf
+          git add latest.pdf
+          git commit -m "Update latest PDF for master"
+          git push -f origin gh-pages
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
