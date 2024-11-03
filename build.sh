@@ -1,9 +1,11 @@
 #!/bin/bash
 
+# If there are errors with any command executed here, exit with non-zero code.
+set -e
+
 # Define BASEDIR as the directory where the script is located
 BASEDIR=$(dirname "$0")
 
-# Define the output directory
 OUTDIR="$BASEDIR/out"
 AUXDIR="$OUTDIR/aux"
 
@@ -12,7 +14,6 @@ if [ ! -d "$OUTDIR" ]; then
     mkdir -p "$OUTDIR"
 fi
 
-# Run pdflatex with the specified options
 pdflatex -interaction=nonstopmode -output-directory="$OUTDIR" "$BASEDIR/src/main.tex"
 
 # Check if AUXDIR exists; if not, create it
