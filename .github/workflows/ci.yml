@@ -3,7 +3,7 @@ name: LaTeX Build
 on:
   push:
     branches:
-      - main
+      - master
   pull_request:
   workflow_dispatch:
 
@@ -19,6 +19,7 @@ jobs:
         uses: teatimeguest/setup-texlive-action@v3
         with:
           packages: |
+            acmart
             scheme-basic
             amscls
             amsfonts
