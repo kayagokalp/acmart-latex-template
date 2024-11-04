@@ -89,6 +89,11 @@ jobs:
       - name: Run LaTeX Build Script
         run: ./build.sh
 
+      - name: Configure Git
+        run: |
+          git config --global user.name "${{ github.actor }}"
+          git config --global user.email "${{ github.actor }}@users.noreply.github.com"
+
       - name: Upload to gh-pages
         run: |
           git checkout --orphan gh-pages
