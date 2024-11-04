@@ -117,7 +117,10 @@ jobs:
           git config --global user.name "${{ github.actor }}"
           git config --global user.email "${{ github.actor }}@users.noreply.github.com"
 
-      - name: Generate Final PDF and Upload to gh-pages
+      - name: Run LaTeX Build Script
+        run: ./build.sh
+
+      - name: Upload to gh-pages
         run: |
           git checkout --orphan gh-pages
           git rm -rf .
