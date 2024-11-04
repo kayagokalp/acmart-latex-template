@@ -84,25 +84,14 @@ jobs:
         run: ./build.sh
 
       - name: Upload PDF Output
-        if: success()
-        uses: actions/upload-artifact@v3
+        id: artifact-upload-step
+        uses: actions/upload-artifact@v4
         with:
           name: pdf-output
           path: out/*.pdf
 
-      - name: Get Artifact ID
-        if: github.event_name == 'pull_request' && success()
-        id: get_artifact_id
-        run: |
-          ARTIFACT_ID=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-          "https://api.github.com/repos/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts" \
-          | jq -r '.artifacts[0].id')
-          echo "artifact_id=$ARTIFACT_ID" >> $GITHUB_ENV
-
-      - name: Create Temporary Link Message for PR
-        if: github.event_name == 'pull_request' && success()
-        run: |
-          echo "PDF for this PR commit is available [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts/${{ env.artifact_id }})" > pdf-link.md
+      - name: Output Artifact URL
+        run: echo "Artifact URL is ${{ steps.artifact-upload-step.outputs.artifact-url }}"
 
       - name: Post Temporary Link in PR
         if: github.event_name == 'pull_request' && success()
@@ -111,8 +100,9 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           repository: ${{ github.repository }}
           issue-number: ${{ github.event.pull_request.number }}
-          body-file: pdf-link.md
-
+          body: |
+            PDF for this PR commit is available [here](${{ steps.artifact-upload-step.outputs.artifact-url }}).
+          
   publish:
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     runs-on: ubuntu-latest
