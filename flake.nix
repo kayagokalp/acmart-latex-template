@@ -1,5 +1,5 @@
 {
-  description = "Nix flake to set up LaTeX environment for acmart";
+  description = "Nix flake to set up LaTeX environment for project with custom acmart";
 
   inputs = {
     nixpkgs.url = "nixpkgs/nixos-unstable";
@@ -7,87 +7,83 @@
 
   outputs = { self, nixpkgs }:
     let
-      pkgs = import nixpkgs { system = "x86_64-linux"; };
+      # Function to create a TeX Live environment per system
+      systemShell = system: let
+        pkgs = import nixpkgs { inherit system; };
 
-      latexPackages = [
-        pkgs.texlive.ifmtarg
-        pkgs.texlive.amscls
-        pkgs.texlive.amsfonts
-        pkgs.texlive.amsmath
-        pkgs.texlive.xint
-        pkgs.texlive.preprint
-        pkgs.texlive.booktabs
-        pkgs.texlive.caption
-        pkgs.texlive.comment
-        pkgs.texlive.cm_super
-        pkgs.texlive.cmap
-        pkgs.texlive.doclicense
-        pkgs.texlive.draftwatermark
-        pkgs.texlive.environ
-        pkgs.texlive.etoolbox
-        pkgs.texlive.fancyhdr
-        pkgs.texlive.float
-        pkgs.texlive.fontaxes
-        pkgs.texlive.geometry
-        pkgs.texlive.graphics
-        pkgs.texlive.hyperref
-        pkgs.texlive.hyperxmp
-        pkgs.texlive.iftex
-        pkgs.texlive.inconsolata
-        pkgs.texlive.libertine
-        pkgs.texlive.ncctools
-        pkgs.texlive.microtype
-        pkgs.texlive.mmap
-        pkgs.texlive.count1to
-        pkgs.texlive.multitoc
-        pkgs.texlive.prelim2e
-        pkgs.texlive.ragged2e
-        pkgs.texlive.everyshi
-        pkgs.texlive.everysel
-        pkgs.texlive.mweights
-        pkgs.texlive.natbib
-        pkgs.texlive.newtx
-        pkgs.texlive.oberdiek
-        pkgs.texlive.pdftex
-        pkgs.texlive.refcount
-        pkgs.texlive.setspace
-        pkgs.texlive.textcase
-        pkgs.texlive.totpages
-        pkgs.texlive.trimspaces
-        pkgs.texlive.upquote
-        pkgs.texlive.url
-        pkgs.texlive.xcolor
-        pkgs.texlive.xkeyval
-        pkgs.texlive.xstring
-      ];
+        # Define required LaTeX packages as a set for compatibility with texlive.combine
+        requiredPackages = {
+          inherit (pkgs.texlive)
+            scheme-small ifmtarg amscls amsfonts amsmath xint preprint
+            booktabs caption comment cm-super cmap doclicense draftwatermark
+            environ etoolbox fancyhdr float fontaxes geometry graphics
+            hyperref hyperxmp iftex inconsolata libertine ncctools
+            microtype mmap prelim2e ragged2e everyshi everysel
+            mweights natbib newtx oberdiek pdftex refcount setspace
+            textcase totpages trimspaces upquote url xcolor xkeyval xstring;
+        };
 
-      texLiveEnv = pkgs.texlive.combine {
-        inherit latexPackages;
-      };
+        # Create the combined TeX Live environment
+        texLiveEnv = pkgs.texlive.combine requiredPackages;
 
-    in
-    {
-      packages.x86_64-linux.default = pkgs.mkShell {
+        # Custom derivation for acmart, downloaded from CTAN
+        acmart = pkgs.stdenv.mkDerivation {
+          pname = "acmart";
+          version = "2023";
+
+          src = pkgs.fetchurl {
+            url = "https://mirrors.ctan.org/macros/latex/contrib/acmart.zip";
+            sha256 = "sha256-9Tfe83/zd9Xa7+tjAbtkVSUgFQhmxkCqroSaAaSW2X0=";
+          };
+
+          nativeBuildInputs = [ pkgs.unzip texLiveEnv ];
+
+          unpackPhase = ''
+            unzip $src
+            cd acmart
+          '';
+
+          buildPhase = ''
+            pdflatex acmart.ins
+          '';
+
+          installPhase = ''
+            mkdir -p $out/texmf/tex/latex/acmart
+            cp *.cls $out/texmf/tex/latex/acmart/
+            cp *.bst $out/texmf/tex/latex/acmart/
+            cp *.bbx $out/texmf/tex/latex/acmart/
+            cp *.cbx $out/texmf/tex/latex/acmart/
+          '';
+
+          TEXMFHOME = "$out/texmf";
+        };
+
+      in
+      pkgs.mkShell {
         buildInputs = [
-          texLiveEnv                        # Custom TeX Live environment
-          pkgs.git                          # Git for version control
-          pkgs.curl                         # Curl for downloading
-          pkgs.ghostscript                  # PDF processing
-          pkgs.nix                          # Nix package manager
-          pkgs.xz                           # XZ compression for TeX Live
-          pkgs.jq                           # JSON processor for GitHub actions
+          texLiveEnv
+          acmart
+          pkgs.git
+          pkgs.curl
+          pkgs.ghostscript
+          pkgs.nix
+          pkgs.xz
+          pkgs.jq
         ];
 
         shellHook = ''
-          echo "LaTeX environment set up with Nix-packaged TeX Live dependencies."
+          export TEXMFHOME=$HOME/.texmf:${acmart}/texmf
+          echo "LaTeX environment set up with custom acmart package."
         '';
       };
+    in
+    {
+      devShells.x86_64-linux.default = systemShell "x86_64-linux";
+      devShells.aarch64-darwin.default = systemShell "aarch64-darwin";
 
-      devShells.default = self.packages.x86_64-linux.default;
-
-      apps.build = {
+      apps.x86_64-linux.build = {
         type = "app";
-        program = "${pkgs.bash}/bin/bash -c ./build.sh";
+        program = "${nixpkgs.legacyPackages.x86_64-linux.bash}/bin/bash -c ./build.sh";
       };
     };
 }
