@@ -19,7 +19,7 @@ jobs:
       - name: Read LaTeX Packages from File
         id: packages
         run: |
-          PACKAGES=$(cat latex-packages)
+          PACKAGES=$(tr '\n' ' ' < latex-packages)
           echo "packages=$PACKAGES" >> $GITHUB_ENV
 
       - name: Setup TeX Live
@@ -70,7 +70,7 @@ jobs:
       - name: Read LaTeX Packages from File
         id: packages
         run: |
-          PACKAGES=$(cat latex-packages)
+          PACKAGES=$(tr '\n' ' ' < latex-packages)
           echo "packages=$PACKAGES" >> $GITHUB_ENV
 
       - name: Setup TeX Live
