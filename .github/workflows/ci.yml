@@ -91,11 +91,11 @@ jobs:
           path: out/*.pdf
 
       - name: Create Temporary Link Message for PR
-        if: github.event_name == 'pull_request_target' && success()
+        if: github.event_name == 'pull_request' && success()
         run: echo "PDF for this PR commit is available [here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}/artifacts)" > pdf-link.md
 
       - name: Post Temporary Link in PR
-        if: github.event_name == 'pull_request_target' && success()
+        if: github.event_name == 'pull_request' && success()
         uses: peter-evans/create-or-update-comment@v2
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
